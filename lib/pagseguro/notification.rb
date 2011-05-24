@@ -1,7 +1,7 @@
 # encoding: utf-8
 module PagSeguro
   class Notification
-    API_URL = "https://pagseguro.uol.com.br/Security/NPI/Default.aspx"
+    API_URL = "https://pagseguro.uol.com.br/pagseguro-ws/checkout/NPI.jhtml"
 
     # Map all the attributes from PagSeguro
     MAPPING = {
@@ -46,6 +46,13 @@ module PagSeguro
     def normalize(hash)
       each_value(hash) do |value|
         Utils.to_utf8(value)
+      end
+    end
+
+    # Normalize the specified hash converting all data to ISO-8859-1
+    def denormalize(hash)
+      each_value(hash) do |value|
+        Utils.to_iso8859(value)
       end
     end
 
@@ -171,10 +178,10 @@ module PagSeguro
       return true if PagSeguro.developer?
 
       # include the params to validate our request
-      request_params = params.merge({
+      request_params = denormalize(params.merge({
         :Comando => "validar",
         :Token => @token || PagSeguro.config["authenticity_token"]
-      }).dup
+      }).dup)
 
       # do the request
       uri = URI.parse(API_URL)
